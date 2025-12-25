@@ -1,0 +1,45 @@
+# Google Cloud Build configuration for CI/CD
+steps:
+  # Build the application
+  - name: 'maven:3.9-eclipse-temurin-17'
+    entrypoint: 'mvn'
+    args: ['clean', 'package', '-DskipTests']
+    dir: 'nicecommerce-springboot'
+
+  # Build Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/nicecommerce:$SHORT_SHA', '-t', 'gcr.io/$PROJECT_ID/nicecommerce:latest', '.']
+    dir: 'nicecommerce-springboot'
+
+  # Push Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/nicecommerce:$SHORT_SHA']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/nicecommerce:latest']
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'nicecommerce'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/nicecommerce:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
+images:
+  - 'gcr.io/$PROJECT_ID/nicecommerce:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/nicecommerce:latest'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1200s'
+

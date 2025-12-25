@@ -1,0 +1,79 @@
+# Jenkins Ignore File
+# Files and directories to exclude from Jenkins workspace
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+
+# Build artifacts (will be generated)
+target/
+build/
+out/
+*.jar
+*.war
+*.ear
+
+# Dependencies
+.m2/repository/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets (should never be in repo)
+*.pem
+*.key
+*.p12
+*.jks
+firebase-service-account.json
+**/firebase-service-account.json
+
+# Media files (large)
+media/
+uploads/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation (optional - can include if needed)
+# docs/
+# *.md
+
+# Test coverage (generated)
+coverage/
+.nyc_output/
+
+# Node modules (if any)
+node_modules/
+
+# Python (if any scripts)
+__pycache__/
+*.pyc
+venv/
+.venv/
+

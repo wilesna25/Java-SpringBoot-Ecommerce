@@ -1,0 +1,6 @@
+NiceCommerce - Modern E-Commerce Platform
+
+A production-ready e-commerce platform built with Spring Boot 3.2.0 and Java 17, featuring Firebase Authentication, Google Cloud Platform integration, and comprehensive CI/CD pipeline. Includes product catalog, shopping cart, order management, payment processing, and inventory management with 90%+ test coverage.
+
+Tech Stack: Spring Boot, Java 17, Maven, MySQL, Firebase Auth, Google Cloud Platform, Jenkins, Docker
+

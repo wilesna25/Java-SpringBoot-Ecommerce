@@ -1,0 +1,35 @@
+# Production Environment Configuration
+# This profile is activated with: spring.profiles.active=prod
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate # Never auto-update schema in production
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  
+  # Use GCP Cloud SQL in production
+  datasource:
+    url: jdbc:mysql:///${gcp.cloud-sql.database-name}?cloudSqlInstance=${gcp.cloud-sql.instance-connection-name}&socketFactory=com.google.cloud.sql.mysql.SocketFactory&useSSL=true
+
+logging:
+  level:
+    root: INFO
+    com.nicecommerce: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+app:
+  storage:
+    type: gcp # Use Google Cloud Storage in production
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS_PROD:} # Must be set in production
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+

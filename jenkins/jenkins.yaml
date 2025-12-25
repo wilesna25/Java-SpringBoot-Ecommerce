@@ -1,0 +1,283 @@
+# Jenkins Configuration as Code (JCasC)
+# Production-ready Jenkins configuration
+
+jenkins:
+  systemMessage: "NiceCommerce CI/CD Pipeline - Production Jenkins"
+  
+  numExecutors: 4
+  
+  scmCheckoutRetryCount: 3
+  
+  clouds:
+    - kubernetes:
+        name: "kubernetes"
+        serverUrl: "https://kubernetes.default"
+        namespace: "jenkins"
+        jenkinsUrl: "http://jenkins:8080"
+        jenkinsTunnel: "jenkins-agent:50000"
+        containerCap: 10
+        maxRequestsPerHost: 32
+        retentionTimeout: 5
+  
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: false
+  
+  remotingSecurity:
+    enabled: true
+  
+  disableRememberMe: false
+  
+  agentProtocols:
+    - "JNLP4-connect"
+    - "Ping"
+  
+  labelAtoms:
+    - name: "docker"
+    - name: "maven"
+    - name: "gcp"
+  
+  nodes:
+    - permanent:
+        name: "master"
+        numExecutors: 2
+        mode: NORMAL
+        launcher:
+          jnlp:
+            workDirSettings:
+              disabled: false
+              workDirPath: "${JENKINS_HOME}/workspace/${ITEM_FULL_NAME}"
+              internalDir: "remoting"
+              failIfWorkDirIsMissing: false
+        nodeProperties:
+          - envVars:
+              env:
+                - key: "MAVEN_HOME"
+                  value: "/usr/share/maven"
+                - key: "JAVA_HOME"
+                  value: "/usr/lib/jvm/java-17-openjdk"
+                - key: "DOCKER_HOST"
+                  value: "unix:///var/run/docker.sock"
+  
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "MAVEN_OPTS"
+            value: "-Xmx2048m -XX:MaxPermSize=512m"
+          - key: "JAVA_OPTS"
+            value: "-Xmx2048m"
+  
+  tool:
+    jdk:
+      installations:
+        - name: "JDK-17"
+          home: "/usr/lib/jvm/java-17-openjdk"
+          properties:
+            - installSource:
+                installers:
+                  - zip:
+                      url: "https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz"
+                      subdir: "jdk-17.0.2+8"
+    
+    maven:
+      installations:
+        - name: "Maven-3.9"
+          home: "/usr/share/maven"
+          properties:
+            - installSource:
+                installers:
+                  - maven:
+                      id: "3.9.5"
+  
+  unclassified:
+    location:
+      adminAddress: "devops@nicecommerce.com"
+      url: "http://jenkins.nicecommerce.com"
+    
+    timestamper:
+      allPipelines: true
+      elapsedTimeFormat: "'<b>'HH:mm:ss.S'</b> '"
+      systemTimeFormat: "'<b>'HH:mm:ss'</b> '"
+    
+    buildStepOperation:
+      enabled: true
+    
+    globalLibraries:
+      libraries:
+        - name: "nicecommerce-shared-library"
+          defaultVersion: "main"
+          implicit: false
+          allowVersionOverride: true
+          includeInChangesets: true
+          retriever:
+            modernSCM:
+              scm:
+                git:
+                  remote: "https://github.com/yourusername/nicecommerce-jenkins-library.git"
+                  credentialsId: "github-credentials"
+    
+    email-ext:
+      defaultSubject: "Build ${BUILD_STATUS} - ${PROJECT_NAME} - Build #${BUILD_NUMBER}"
+      defaultBody: "Build ${BUILD_STATUS} - ${PROJECT_NAME} - Build #${BUILD_NUMBER}"
+      defaultReplyTo: "devops@nicecommerce.com"
+      maxAttachmentSize: 10
+      defaultPresendScript: ""
+      defaultPostsendScript: ""
+      emergencyReroute: ""
+      excludedCommitters: ""
+      defaultTriggerIds:
+        - "hudson.plugins.emailext.plugins.trigger.FailureTrigger"
+        - "hudson.plugins.emailext.plugins.trigger.SuccessTrigger"
+        - "hudson.plugins.emailext.plugins.trigger.UnstableTrigger"
+    
+    slackNotifier:
+      teamDomain: "nicecommerce"
+      tokenCredentialId: "slack-token"
+      room: "#deployments"
+      botUser: true
+      sendAs: "Jenkins"
+      startNotification: true
+      notifySuccess: true
+      notifyAborted: true
+      notifyNotBuilt: true
+      notifyUnstable: true
+      notifyRegression: true
+      notifyFailure: true
+      notifyBackToNormal: true
+      notifyRepeatedFailure: true
+      includeTestSummary: true
+      includeCustomMessage: true
+      customMessage: "Build ${BUILD_STATUS} - ${PROJECT_NAME} - Build #${BUILD_NUMBER}"
+    
+    sonarQubeBuilder:
+      installations:
+        - name: "SonarQube"
+          serverUrl: "http://sonarqube:9000"
+          serverVersion: "LATEST"
+          credentialsId: "sonar-token"
+    
+    dependencyCheck:
+      global:
+        enableRetireJS: true
+        enableNodeJS: true
+        enableNSP: true
+        enableOssIndex: true
+        enableArtifactory: false
+        enableCentral: true
+        enableNexus: false
+        enableNVD: true
+        enableNodeAudit: true
+        enableNodeAuditAnalyzer: true
+        enableRetireJS: true
+        enableRubygems: true
+        enablePyPI: true
+        enablePip: true
+        enablePipfile: true
+        enablePoetry: true
+        enableNugetconf: true
+        enableNuspec: true
+        enableComposer: true
+        enableCmake: true
+        enableAutoconf: true
+        enableAssembly: true
+        enableGolangDep: true
+        enableGolangMod: true
+        enableCocoapods: true
+        enableSwiftPackageManager: true
+        enableCarthage: true
+        enableBundlerAudit: true
+        enableCargoAudit: true
+        enableMixAudit: true
+        enableGradle: false
+        enableMaven: true
+        enableSbt: true
+        enableIvy: true
+        enableAnt: true
+        enableNPM: true
+        enableYarn: true
+        enablePNPM: true
+        enableLerna: true
+        enableBower: true
+        enableYarnAudit: true
+        enablePnpmAudit: true
+        enableNodeAudit: true
+        enableRetireJS: true
+        enableNSP: true
+        enableOssIndex: true
+        enableArtifactory: false
+        enableCentral: true
+        enableNexus: false
+        enableNVD: true
+        enableNodeAudit: true
+        enableNodeAuditAnalyzer: true
+        enableRetireJS: true
+        enableRubygems: true
+        enablePyPI: true
+        enablePip: true
+        enablePipfile: true
+        enablePoetry: true
+        enableNugetconf: true
+        enableNuspec: true
+        enableComposer: true
+        enableCmake: true
+        enableAutoconf: true
+        enableAssembly: true
+        enableGolangDep: true
+        enableGolangMod: true
+        enableCocoapods: true
+        enableSwiftPackageManager: true
+        enableCarthage: true
+        enableBundlerAudit: true
+        enableCargoAudit: true
+        enableMixAudit: true
+        enableGradle: false
+        enableMaven: true
+        enableSbt: true
+        enableIvy: true
+        enableAnt: true
+        enableNPM: true
+        enableYarn: true
+        enablePNPM: true
+        enableLerna: true
+        enableBower: true
+        enableYarnAudit: true
+        enablePnpmAudit: true
+
+jobs:
+  - script: |
+      pipelineJob('nicecommerce-ci-cd') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/yourusername/nicecommerce-springboot.git')
+                  credentials('github-credentials')
+                }
+                branches('*/main', '*/develop')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+        triggers {
+          scm('H/5 * * * *')
+          githubPush()
+        }
+        logRotator {
+          numToKeep(10)
+          daysToKeep(30)
+        }
+      }
+

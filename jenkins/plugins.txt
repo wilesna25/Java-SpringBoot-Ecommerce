@@ -1,0 +1,84 @@
+# Jenkins Plugins List
+# Required plugins for NiceCommerce CI/CD pipeline
+# Install using: jenkins-plugin-cli --plugin-file plugins.txt
+
+# Core plugins
+workflow-aggregator
+workflow-job
+workflow-cps
+workflow-basic-steps
+workflow-durable-task-step
+
+# Build and deployment
+maven-plugin
+docker-workflow
+docker-plugin
+kubernetes
+google-cloudbuild
+
+# Testing and quality
+junit
+cobertura
+jacoco
+htmlpublisher
+test-results-analyzer
+
+# Code quality
+sonar
+checkstyle
+pmd
+warnings-ng
+dependency-check-jenkins-plugin
+
+# Security
+credentials-binding
+ssh-credentials
+plain-credentials
+secret-file-credentials
+google-oauth-plugin
+
+# Notifications
+email-ext
+slack
+telegram-notifications
+discord-notifier
+
+# UI enhancements
+blueocean
+ansicolor
+timestamper
+build-timeout
+build-name-setter
+
+# Source control
+git
+github
+github-branch-source
+bitbucket
+gitlab-plugin
+
+# Artifacts
+artifactdeployer
+copyartifact
+fitnesse
+
+# Monitoring
+monitoring
+metrics
+prometheus
+
+# Utilities
+config-file-provider
+envinject
+parameterized-trigger
+build-timestamp
+build-user-vars
+
+# GCP integration
+google-cloudbuild
+google-kubernetes-engine
+google-storage-plugin
+
+# Container scanning
+trivy-scanner
+
