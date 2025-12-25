@@ -55,27 +55,31 @@ spring:
       max-file-size: 10MB
       max-request-size: 50MB
   
-  # Redis Configuration (for caching and session management)
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
+  # Kafka Configuration (for event streaming and messaging)
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:nicecommerce-group}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 1
   
-  # Cache Configuration
+  # Cache Configuration (using Caffeine for in-memory caching)
   cache:
-    type: redis # Options: redis, caffeine, simple, none
-    redis:
-      time-to-live: 3600000 # 1 hour in milliseconds
-      cache-null-values: false
-      use-key-prefix: true
-      key-prefix: nicecommerce:cache:
+    type: caffeine # In-memory cache (replaces Redis)
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=1h
 
 # Server Configuration
 server:
@@ -213,4 +217,38 @@ gcp:
   secret-manager:
     enabled: ${GCP_SECRET_MANAGER_ENABLED:false}
     secret-prefix: ${GCP_SECRET_PREFIX:nicecommerce}
+
+# SpringDoc OpenAPI Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    doc-expansion: none
+    display-request-duration: true
+    show-common-extensions: true
+    try-it-out-enabled: true
+    filter: true
+    persist-authorization: true
+    # Custom CSS for better UI
+    config-url: /api-docs/swagger-config
+    urls:
+      - url: /api-docs
+        name: NiceCommerce API
+    # OAuth2 configuration for Swagger UI
+    oauth:
+      client-id: ${SWAGGER_OAUTH_CLIENT_ID:}
+      client-secret: ${SWAGGER_OAUTH_CLIENT_SECRET:}
+      realm: ${SWAGGER_OAUTH_REALM:}
+      app-name: NiceCommerce API
+      use-pkce-with-authorization-code-grant: true
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  packages-to-scan: com.nicecommerce
+  paths-to-match: /api/**
 

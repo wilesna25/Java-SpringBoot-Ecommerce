@@ -1,0 +1,604 @@
+openapi: 3.0.3
+info:
+  title: NiceCommerce Mobile API
+  version: 1.0.0
+  description: |
+    Mobile API for iOS and Android clients.
+    This API provides endpoints for product catalog, orders, cart, and user management.
+  contact:
+    name: API Support
+    email: api-support@nicecommerce.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.nicecommerce.com/v1
+    description: Production server
+  - url: https://api-dev.nicecommerce.com/v1
+    description: Development server
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+tags:
+  - name: Products
+    description: Product catalog operations
+  - name: Orders
+    description: Order management
+  - name: Cart
+    description: Shopping cart operations
+  - name: Users
+    description: User management
+  - name: Auth
+    description: Authentication operations
+
+paths:
+  /products:
+    get:
+      summary: List products
+      description: Retrieve a paginated list of products with optional filtering
+      operationId: listProducts
+      tags:
+        - Products
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-indexed)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Page size
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: category
+          in: query
+          description: Filter by category slug
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search term
+          required: false
+          schema:
+            type: string
+        - name: isDrop
+          in: query
+          description: Filter drop products
+          required: false
+          schema:
+            type: boolean
+        - name: sort
+          in: query
+          description: Sort field and direction (e.g., -createdAt, price)
+          required: false
+          schema:
+            type: string
+            default: -createdAt
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+              examples:
+                success:
+                  value:
+                    products:
+                      - id: 1
+                        name: "Premium T-Shirt"
+                        slug: "premium-t-shirt"
+                        price: 29.99
+                        description: "High-quality cotton t-shirt"
+                        images:
+                          - "https://example.com/image1.jpg"
+                        sizes:
+                          S: 10
+                          M: 15
+                          L: 8
+                    currentPage: 0
+                    totalPages: 5
+                    totalItems: 100
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create product
+      description: Create a new product (Admin only)
+      operationId: createProduct
+      tags:
+        - Products
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /products/{id}:
+    get:
+      summary: Get product by ID
+      description: Retrieve a single product by ID
+      operationId: getProductById
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      summary: Update product
+      description: Update an existing product (Admin only)
+      operationId: updateProduct
+      tags:
+        - Products
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /products/{id}/stock:
+    patch:
+      summary: Update product stock
+      description: Update stock for a specific size (Admin only)
+      operationId: updateProductStock
+      tags:
+        - Products
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStockRequest'
+      responses:
+        '200':
+          description: Stock updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders:
+    post:
+      summary: Create order
+      description: Create a new order from cart
+      operationId: createOrder
+      tags:
+        - Orders
+      security:
+        - FirebaseAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      summary: List user orders
+      description: Get orders for the authenticated user
+      operationId: listOrders
+      tags:
+        - Orders
+      security:
+        - FirebaseAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    FirebaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID Token
+
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - price
+        - isActive
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Premium T-Shirt"
+        slug:
+          type: string
+          example: "premium-t-shirt"
+        description:
+          type: string
+          example: "High-quality cotton t-shirt"
+        price:
+          type: number
+          format: decimal
+          example: 29.99
+        categoryName:
+          type: string
+          example: "Clothing"
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          example:
+            - "https://example.com/image1.jpg"
+            - "https://example.com/image2.jpg"
+        sizes:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            S: 10
+            M: 15
+            L: 8
+        isDrop:
+          type: boolean
+          example: false
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - price
+        - categoryId
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        categoryId:
+          type: integer
+        images:
+          type: array
+          items:
+            type: string
+        sizes:
+          type: object
+          additionalProperties:
+            type: integer
+        isDrop:
+          type: boolean
+          default: false
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+        images:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+
+    UpdateStockRequest:
+      type: object
+      required:
+        - size
+        - quantity
+      properties:
+        size:
+          type: string
+          example: "M"
+        quantity:
+          type: integer
+          example: 10
+
+    ProductListResponse:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+          format: int64
+
+    Order:
+      type: object
+      required:
+        - id
+        - status
+        - totalAmount
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        status:
+          type: string
+        totalAmount:
+          type: number
+          format: decimal
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+          format: decimal
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - shippingAddress
+      properties:
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        idempotencyKey:
+          type: string
+          description: Unique key to prevent duplicate orders
+          example: "order-12345-abc"
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - zipCode
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        zipCode:
+          type: string
+        country:
+          type: string
+          default: "US"
+
+    OrderListResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        currentPage:
+          type: integer
+        totalPages:
+          type: integer
+        totalItems:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: "2024-01-15T10:30:00Z"
+            status: 400
+            error: "Bad Request"
+            message: "Validation failed"
+            errors:
+              name: "Name is required"
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: "2024-01-15T10:30:00Z"
+            status: 401
+            error: "Unauthorized"
+            message: "Authentication required"
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: "2024-01-15T10:30:00Z"
+            status: 403
+            error: "Forbidden"
+            message: "Insufficient permissions"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: "2024-01-15T10:30:00Z"
+            status: 404
+            error: "Not Found"
+            message: "Resource not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            timestamp: "2024-01-15T10:30:00Z"
+            status: 500
+            error: "Internal Server Error"
+            message: "An unexpected error occurred"
+

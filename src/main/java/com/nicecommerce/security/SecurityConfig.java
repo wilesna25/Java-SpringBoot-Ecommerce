@@ -80,11 +80,18 @@ public class SecurityConfig {
             .sessionManagement(session -> 
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Public endpoints
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/products/**").permitAll()
                 .requestMatchers("/api/categories/**").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
+                // Swagger/OpenAPI documentation endpoints
+                .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api-docs/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**", "/webjars/**").permitAll()
+                // Admin endpoints
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                // All other requests require authentication
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
